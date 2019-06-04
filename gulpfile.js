@@ -1,11 +1,20 @@
 var gulp = require('gulp');
 var less = require('gulp-less');
 var rename = require('gulp-rename');
-var postcss = require('gulp-postcss');
+var postcss = require('postcss');
+var postcssGulp = require('gulp-postcss');
 var cssnano = require('gulp-cssnano');
 var header = require('gulp-header');
 var autoprefixer = require('autoprefixer');
 var pkg = require('./package.json');
+
+var pxToRpx = postcss.plugin('postcss-px-to-rpx', function () {
+  return function (root) {
+    root.replaceValues(/(\d*\.?\d+)px/ig, { fast: 'px' }, (string) => {
+      return `${parseFloat(string) * 2}rpx`;
+    })
+  };
+});
 
 gulp.task('watch', function() {
   gulp.watch('src/**', ['build:style', 'build:example']);
@@ -22,7 +31,7 @@ gulp.task('build:style', function() {
   gulp
     .src(['src/style/**/*.wxss', 'src/example/*.wxss'], { base: 'src' })
     .pipe(less())
-    .pipe(postcss([autoprefixer(['iOS >= 8', 'Android >= 4.1'])]))
+    .pipe(postcssGulp([pxToRpx, autoprefixer(['iOS >= 8', 'Android >= 4.1'])]))
     .pipe(
       cssnano({
         zindex: false,
